@@ -193,9 +193,9 @@
       <xsl:text> GG%</xsl:text>
       <xsl:text><![CDATA[</td><td>]]></xsl:text>
       <xsl:text>FG </xsl:text>
-      <xsl:value-of select="og/low"/>
+      <xsl:value-of select="fg/low"/>
       <xsl:text> - </xsl:text>
-      <xsl:value-of select="og/high"/>
+      <xsl:value-of select="fg/high"/>
       <xsl:text><![CDATA[</td></tr>]]></xsl:text>
     </xsl:if>
     <xsl:if test="abv/@flexible = 'false'">
