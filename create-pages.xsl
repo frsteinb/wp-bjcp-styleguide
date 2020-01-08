@@ -7,12 +7,14 @@
   xmlns:str="http://exslt.org/strings"
   xmlns:func="http://exslt.org/functions"
   xmlns:math="http://exslt.org/math"
+  xmlns:date="http://exslt.org/dates-and-times"
   xmlns:brew="http://frankensteiner.familie-steinberg.org/brew"
-  extension-element-prefixes="exsl str func math">
+  extension-element-prefixes="exsl str func math date">
 
 
+  <xsl:variable name="date"><xsl:value-of select="substring(date:date-time(),1,10)"/><xsl:text> </xsl:text><xsl:value-of select="substring(date:date-time(),12,5)"/></xsl:variable>
   <xsl:variable name="posttype">glossary</xsl:variable>
-  <xsl:variable name="postprefix">/glossary/</xsl:variable>
+  <xsl:variable name="postprefix">/</xsl:variable>
   <xsl:variable name="topposttitle">BJCP Bierstilrichtlinien 2015</xsl:variable>
   <xsl:variable name="toppostname">bjcp-styleguide-2015</xsl:variable>
 
@@ -90,6 +92,12 @@
 
 
 
+  <xsl:template name="footer">
+    <xsl:text></xsl:text><xsl:text><![CDATA[<p style="font-size: 70%;">Diese Informationen entstammen dem <a href="https://heimbrauconvention.de/index.php/bjcp-styleguide/">Übersetzungsprojekt</a> der <a href="http://dev.bjcp.org/beer-styles/introduction-to-the-2015-guidelines/">BJCP Style Guidelines</a>. Zuletzt aktualisiert: ]]></xsl:text><xsl:value-of select="$date"/><xsl:text><![CDATA[.</p>]]></xsl:text>
+  </xsl:template>
+
+
+  
   <xsl:template match="/bjcp:styleguide">
     <exsl:document href="-" method="text" encoding="UTF-8"
                    omit-xml-declaration="yes">
@@ -209,11 +217,14 @@
     </xsl:choose>
     <xsl:text><![CDATA[</dt>]]></xsl:text>
     <xsl:text><![CDATA[<dd>]]></xsl:text>
+    <xsl:apply-templates mode="asis"/>
+    <!--
     <xsl:call-template name="subst">
       <xsl:with-param name="text" select="."/>
       <xsl:with-param name="replace">'</xsl:with-param>
       <xsl:with-param name="with">\'</xsl:with-param>
     </xsl:call-template>
+    -->
     <xsl:text><![CDATA[</dd>]]></xsl:text>
   </xsl:template>
 
@@ -355,18 +366,35 @@
   <xsl:template match="*" mode="asis">
     <xsl:text><![CDATA[<]]></xsl:text>
     <xsl:value-of select="local-name(.)"/>
+    <xsl:apply-templates select="@*" mode="asis"/>
     <xsl:text><![CDATA[>]]></xsl:text>
-    <xsl:apply-templates select="* | @* | text()" mode="asis"/>
+    <xsl:apply-templates select="* | text()" mode="asis"/>
     <xsl:text><![CDATA[</]]></xsl:text>
     <xsl:value-of select="local-name(.)"/>
     <xsl:text><![CDATA[>]]></xsl:text>
   </xsl:template>
 
   <xsl:template match="@*" mode="asis">
+    <xsl:text><![CDATA[ ]]></xsl:text>
+    <xsl:value-of select="local-name(.)"/>
+    <xsl:text><![CDATA[=\']]></xsl:text>
+    <xsl:choose>
+      <xsl:when test="substring(.,1,1) = '#'">
+	<xsl:value-of select="$postprefix"/>
+	<xsl:text>bjcp-</xsl:text>
+	<xsl:value-of select="translate(substring(.,2),'ABCDEFGHIJKLMNOPQRSTUVWXYZ ','abcdefghijklmnopqrstuvwxyz-')"/>
+      </xsl:when>
+      <xsl:otherwise>
+	<xsl:value-of select="."/>
+      </xsl:otherwise>
+    </xsl:choose>
+    <xsl:text><![CDATA[\']]></xsl:text>
+    <!--
     <xsl:copy>
       <xsl:apply-templates select="@*" mode="asis"/>
       <xsl:apply-templates mode="asis"/>
     </xsl:copy>
+    -->
   </xsl:template>
 
   <xsl:template match="text()" mode="asis">
@@ -434,7 +462,7 @@
     
     <xsl:apply-templates select="." mode="children"/>
 
-    <xsl:text></xsl:text><xsl:text><![CDATA[<p style="font-size: 70%;">Diese Informationen entstammen dem <a href="https://heimbrauconvention.de/index.php/bjcp-styleguide/">Übersetzungsprojekt</a> der <a href="http://dev.bjcp.org/beer-styles/introduction-to-the-2015-guidelines/">BJCP Style Guidelines</a>.</p>]]></xsl:text>
+    <xsl:call-template name="footer"/>
 
     <xsl:text>','</xsl:text>
     <xsl:value-of select="$title"/>
@@ -458,7 +486,7 @@
 
     <xsl:text><![CDATA[<p>...TBD...</p>]]></xsl:text>
 
-    <xsl:text></xsl:text><xsl:text><![CDATA[<p style="font-size: 70%;">Diese Informationen entstammen dem <a href="https://heimbrauconvention.de/index.php/bjcp-styleguide/">Übersetzungsprojekt</a> der <a href="http://dev.bjcp.org/beer-styles/introduction-to-the-2015-guidelines/">BJCP Style Guidelines</a>.</p>]]></xsl:text>
+    <xsl:call-template name="footer"/>
 
     <xsl:text>','</xsl:text>
     <xsl:value-of select="$title"/>
@@ -492,7 +520,7 @@
       <xsl:text><![CDATA[</a><br/>]]></xsl:text>
     </xsl:for-each>
   
-    <xsl:text></xsl:text><xsl:text><![CDATA[<p style="font-size: 70%;">Diese Informationen entstammen dem <a href="https://heimbrauconvention.de/index.php/bjcp-styleguide/">Übersetzungsprojekt</a> der <a href="http://dev.bjcp.org/beer-styles/introduction-to-the-2015-guidelines/">BJCP Style Guidelines</a>.</p>]]></xsl:text>
+    <xsl:call-template name="footer"/>
 
     <xsl:text>','</xsl:text>
     <xsl:value-of select="$topposttitle"/>
