@@ -11,10 +11,15 @@ The stats blocks will contain international units primarily converted
 to German units (Stammwürze in °P, Color in EBC), but the original
 value are also displayed.
 
+### Prerequisite
+
+The posts are generated as glossary entries. Therefore, the glossary
+plugin "CM Tooltip Glossary" has to be installed and activated.
+
 ### IMPORTANT NOTE
 
 The BJCP does a hard voluntary job. Please accept there terms
-on using the styleguide. 
+on using the style guidelines. 
 
 ### License
 
