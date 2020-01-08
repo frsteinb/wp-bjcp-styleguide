@@ -12,12 +12,16 @@
   extension-element-prefixes="exsl str func math date">
 
 
+
   <xsl:variable name="date"><xsl:value-of select="substring(date:date-time(),1,10)"/><xsl:text> </xsl:text><xsl:value-of select="substring(date:date-time(),12,5)"/></xsl:variable>
   <xsl:variable name="posttype">glossary</xsl:variable>
-  <xsl:variable name="postprefix">/</xsl:variable>
+  <xsl:variable name="postprefix">/glossary/</xsl:variable>
   <xsl:variable name="topposttitle">BJCP Bierstilrichtlinien 2015</xsl:variable>
   <xsl:variable name="toppostname">bjcp-styleguide-2015</xsl:variable>
+  <xsl:variable name="deletepattern"> auto-generated bjcp post </xsl:variable>
 
+
+  
   <xsl:template name="subst">
     <xsl:param name="text"/>
     <xsl:param name="replace"/>
@@ -101,15 +105,16 @@
   <xsl:template match="/bjcp:styleguide">
     <exsl:document href="-" method="text" encoding="UTF-8"
                    omit-xml-declaration="yes">
-      <xsl:text>DELETE FROM `wp_posts` WHERE post_content LIKE '<![CDATA[<!-- auto-generated bjcp glossary post-->]]>%';
-</xsl:text>
-      <xsl:text>DELETE FROM `wp_posts` WHERE post_content LIKE '<![CDATA[<!-- auto-generated bjcp post -->]]>%';
+      <xsl:text>DELETE FROM `wp_posts` WHERE post_content LIKE '<![CDATA[<!--]]></xsl:text><xsl:value-of select="$deletepattern"/><xsl:text><![CDATA[-->]]>%';
 </xsl:text>
       <xsl:call-template name="toppost"/>
       <xsl:apply-templates select="( //bjcp:category | //bjcp:subcategory | //bjcp:chapter )"/>
+      <xsl:call-template name="tagposts"/>
     </exsl:document>
   </xsl:template>
 
+
+  
   <xsl:template match="bjcp:subcategory/bjcp:subcategory" mode="classification">
     <xsl:variable name="postname">bjcp-<xsl:value-of select="translate(@id,'ABCDEFGHIJKLMNOPQRSTUVWXYZ ','abcdefghijklmnopqrstuvwxyz-')"/></xsl:variable>
     <xsl:apply-templates select=".." mode="classification">
@@ -125,6 +130,8 @@
     <xsl:text><![CDATA[</a><br/>]]></xsl:text>
   </xsl:template>
 
+
+  
   <xsl:template match="bjcp:category/bjcp:subcategory" mode="classification">
     <xsl:param name="leaf">true</xsl:param>
     <xsl:variable name="postname">bjcp-<xsl:value-of select="translate(@id,'ABCDEFGHIJKLMNOPQRSTUVWXYZ ','abcdefghijklmnopqrstuvwxyz-')"/></xsl:variable>
@@ -159,6 +166,8 @@
     </xsl:if>
   </xsl:template>
 
+
+  
   <xsl:template match="bjcp:category" mode="classification">
     <xsl:param name="leaf">true</xsl:param>
     <xsl:variable name="postname">bjcp-<xsl:value-of select="translate(@id,'ABCDEFGHIJKLMNOPQRSTUVWXYZ ','abcdefghijklmnopqrstuvwxyz-')"/></xsl:variable>
@@ -196,6 +205,8 @@
     </xsl:if>
   </xsl:template>
 
+
+  
   <xsl:template match="*" mode="section">
     <xsl:text><![CDATA[<dt>]]></xsl:text>
     <xsl:choose>
@@ -228,6 +239,8 @@
     <xsl:text><![CDATA[</dd>]]></xsl:text>
   </xsl:template>
 
+
+  
   <xsl:template match="*" mode="children">
     <xsl:variable name="list" select="./*[name]"/>
     <xsl:for-each select="$list">
@@ -249,6 +262,8 @@
     </xsl:for-each>
   </xsl:template>
 
+
+  
   <xsl:template match="bjcp:specs">
     <xsl:text><![CDATA[<dt>]]>Eckdaten<![CDATA[</dt>]]></xsl:text>
     <xsl:text><![CDATA[<dd>]]></xsl:text>
@@ -363,6 +378,8 @@
     <xsl:text><![CDATA[</dd>]]></xsl:text>
   </xsl:template>
 
+
+  
   <xsl:template match="*" mode="asis">
     <xsl:text><![CDATA[<]]></xsl:text>
     <xsl:value-of select="local-name(.)"/>
@@ -373,6 +390,20 @@
     <xsl:value-of select="local-name(.)"/>
     <xsl:text><![CDATA[>]]></xsl:text>
   </xsl:template>
+
+
+
+  <xsl:template match="bjcp:tag" mode="asis">
+    <xsl:text><![CDATA[<a href="]]></xsl:text>
+    <xsl:value-of select="$postprefix"/>
+    <xsl:text>bjcp-</xsl:text>
+    <xsl:value-of select="text()"/>
+    <xsl:text><![CDATA[">]]></xsl:text>
+    <xsl:value-of select="text()"/>
+    <xsl:text><![CDATA[</a><br/>]]></xsl:text>
+  </xsl:template>
+
+
 
   <xsl:template match="@*" mode="asis">
     <xsl:text><![CDATA[ ]]></xsl:text>
@@ -397,6 +428,8 @@
     -->
   </xsl:template>
 
+
+  
   <xsl:template match="text()" mode="asis">
     <xsl:call-template name="subst">
       <xsl:with-param name="text" select="."/>
@@ -405,6 +438,8 @@
     </xsl:call-template>
   </xsl:template>
 
+
+  
   <xsl:template match="bjcp:category | bjcp:subcategory">
     <xsl:variable name="id">
       <xsl:choose>
@@ -431,7 +466,7 @@
       </xsl:choose>
     </xsl:variable>
     <xsl:variable name="postname">bjcp-<xsl:value-of select="translate($id,'ABCDEFGHIJKLMNOPQRSTUVWXYZ ','abcdefghijklmnopqrstuvwxyz-')"/></xsl:variable>
-    <xsl:text>INSERT INTO `wp_posts` (post_author,post_date,post_date_gmt,post_content,post_title,post_excerpt,comment_status,ping_status,post_name,to_ping,pinged,post_modified,post_modified_gmt,post_content_filtered,post_type) VALUES (1,NOW(),NOW(),'<![CDATA[<!-- auto-generated bjcp post -->]]></xsl:text>
+    <xsl:text>INSERT INTO `wp_posts` (post_author,post_date,post_date_gmt,post_content,post_title,post_excerpt,comment_status,ping_status,post_name,to_ping,pinged,post_modified,post_modified_gmt,post_content_filtered,post_type) VALUES (1,NOW(),NOW(),'<![CDATA[<!--]]></xsl:text><xsl:value-of select="$deletepattern"/><xsl:text><![CDATA[-->]]></xsl:text>
 
     <xsl:text><![CDATA[<dt>Klassifizierung</dt><dd>]]></xsl:text>
     <xsl:apply-templates select="." mode="classification"/>
@@ -474,6 +509,8 @@
 </xsl:text>
   </xsl:template>
 
+
+  
   <xsl:template match="bjcp:chapter">
     <xsl:variable name="id">
       <xsl:value-of select="@id"/>
@@ -482,10 +519,10 @@
       <xsl:value-of select="bjcp:h2"/>
     </xsl:variable>
     <xsl:variable name="postname">bjcp-<xsl:value-of select="translate($id,'ABCDEFGHIJKLMNOPQRSTUVWXYZ ','abcdefghijklmnopqrstuvwxyz-')"/></xsl:variable>
-    <xsl:text>INSERT INTO `wp_posts` (post_author,post_date,post_date_gmt,post_content,post_title,post_excerpt,comment_status,ping_status,post_name,to_ping,pinged,post_modified,post_modified_gmt,post_content_filtered,post_type) VALUES (1,NOW(),NOW(),'<![CDATA[<!-- auto-generated bjcp post -->]]></xsl:text>
+    <xsl:text>INSERT INTO `wp_posts` (post_author,post_date,post_date_gmt,post_content,post_title,post_excerpt,comment_status,ping_status,post_name,to_ping,pinged,post_modified,post_modified_gmt,post_content_filtered,post_type) VALUES (1,NOW(),NOW(),'<![CDATA[<!--]]></xsl:text><xsl:value-of select="$deletepattern"/><xsl:text><![CDATA[-->]]></xsl:text>
 
-    <xsl:text><![CDATA[<p>...TBD...</p>]]></xsl:text>
-
+    <xsl:apply-templates mode="asis"/>
+    
     <xsl:call-template name="footer"/>
 
     <xsl:text>','</xsl:text>
@@ -498,8 +535,10 @@
 </xsl:text>
   </xsl:template>
 
+
+  
   <xsl:template name="toppost">
-    <xsl:text>INSERT INTO `wp_posts` (post_author,post_date,post_date_gmt,post_content,post_title,post_excerpt,comment_status,ping_status,post_name,to_ping,pinged,post_modified,post_modified_gmt,post_content_filtered,post_type) VALUES (1,NOW(),NOW(),'<![CDATA[<!-- auto-generated bjcp post -->]]></xsl:text>
+    <xsl:text>INSERT INTO `wp_posts` (post_author,post_date,post_date_gmt,post_content,post_title,post_excerpt,comment_status,ping_status,post_name,to_ping,pinged,post_modified,post_modified_gmt,post_content_filtered,post_type) VALUES (1,NOW(),NOW(),'<![CDATA[<!--]]></xsl:text><xsl:value-of select="$deletepattern"/><xsl:text><![CDATA[-->]]></xsl:text>
 
     <xsl:for-each select="( //bjcp:category | //bjcp:chapter )">
       <xsl:variable name="postname">bjcp-<xsl:value-of select="translate(@id,'ABCDEFGHIJKLMNOPQRSTUVWXYZ ','abcdefghijklmnopqrstuvwxyz-')"/></xsl:variable>
@@ -532,4 +571,59 @@
 </xsl:text>
   </xsl:template>
 
+
+  
+  <xsl:template name="tagposts">
+
+    <xsl:for-each select="//bjcp:tag[not(./text()=preceding::bjcp:tag/text())]">
+      <xsl:variable name="tag">
+	<xsl:value-of select="text()"/>
+      </xsl:variable>
+      <xsl:text>INSERT INTO `wp_posts` (post_author,post_date,post_date_gmt,post_content,post_title,post_excerpt,comment_status,ping_status,post_name,to_ping,pinged,post_modified,post_modified_gmt,post_content_filtered,post_type) VALUES (1,NOW(),NOW(),'<![CDATA[<!--]]></xsl:text><xsl:value-of select="$deletepattern"/><xsl:text><![CDATA[-->]]></xsl:text>
+
+      <xsl:text><![CDATA[<p>]]></xsl:text>
+      <xsl:for-each select="//bjcp:div[@class='table']/bjcp:div[@class='table-row'][bjcp:div[@class='table-cell'] = $tag]">
+	<xsl:value-of select="preceding::bjcp:div[@class='table-head'][1]/text()"/>
+	<xsl:text>: </xsl:text>
+	<xsl:value-of select="bjcp:div[@class='table-cell'][2]/text()"/>
+      </xsl:for-each>
+      <xsl:text><![CDATA[</p>]]></xsl:text>
+      
+      <xsl:for-each select="//bjcp:subcategory[bjcp:tags/bjcp:tag/text() = $tag]">
+	<xsl:variable name="postname">bjcp-<xsl:value-of select="translate(@id,'ABCDEFGHIJKLMNOPQRSTUVWXYZ ','abcdefghijklmnopqrstuvwxyz-')"/></xsl:variable>
+	<xsl:text><![CDATA[<a href="]]></xsl:text>
+	<xsl:value-of select="$postprefix"/>
+	<xsl:value-of select="$postname"/>
+	<xsl:text><![CDATA[">]]></xsl:text>
+	<xsl:choose>
+	  <xsl:when test="contains(@id,'-')">
+	    <xsl:value-of select="substring-before(@id,'-')"/>
+	  </xsl:when>
+	  <xsl:otherwise>
+	    <xsl:value-of select="@id"/>
+	  </xsl:otherwise>
+	</xsl:choose>
+	<xsl:text> </xsl:text>
+	<xsl:value-of select="bjcp:name"/>
+	<xsl:text></xsl:text>
+	<xsl:text><![CDATA[</a><br/>]]></xsl:text>
+      </xsl:for-each>
+      
+      <xsl:call-template name="footer"/>
+      
+      <xsl:text>','Bierstile mit Tag "</xsl:text>
+      <xsl:value-of select="$tag"/>
+      <xsl:text>"','','closed','closed','bjcp-</xsl:text>
+      <xsl:value-of select="$tag"/>
+      <xsl:text>','','',NOW(),NOW(),'','</xsl:text>
+      <xsl:value-of select="$posttype"/>
+      <xsl:text>');
+</xsl:text>
+
+    </xsl:for-each>
+    
+  </xsl:template>
+
+
+  
 </xsl:stylesheet>
