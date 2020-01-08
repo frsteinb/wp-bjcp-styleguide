@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
 
 <xsl:stylesheet version="1.0"
-  xmlns:bjcp="http://heimbrauconvention.de/bjcp-styleguide/2015"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
   xmlns:exsl="http://exslt.org/common"
   xmlns:str="http://exslt.org/strings"
@@ -86,64 +85,55 @@
 
 
 
-  <xsl:template match="/bjcp:styleguide">
+  <xsl:template match="/styleguide">
     <exsl:document href="-" method="text" encoding="UTF-8"
                    omit-xml-declaration="yes">
       <xsl:text>DELETE FROM `wp_posts` WHERE post_content LIKE '<![CDATA[<!-- auto-generated bjcp glossary post-->]]>%';
 </xsl:text>
-      <xsl:apply-templates select="( //bjcp:category | //bjcp:subcategory )"/>
+      <xsl:apply-templates select="( //class | //category | //subcategory | //specialty )"/>
     </exsl:document>
   </xsl:template>
 
-  <xsl:template match="bjcp:subcategory/bjcp:subcategory" mode="classification">
+  <xsl:template match="specialty" mode="classification">
     <xsl:apply-templates select=".." mode="classification"/>
-    <xsl:text>- - - Alternative: </xsl:text>
-    <xsl:value-of select="bjcp:name"/>
+    <xsl:text>- - - - Specialty </xsl:text>
+    <xsl:value-of select="name"/>
     <xsl:text><![CDATA[<br/>]]></xsl:text>
   </xsl:template>
 
-  <xsl:template match="bjcp:category/bjcp:subcategory" mode="classification">
+  <xsl:template match="subcategory" mode="classification">
     <xsl:apply-templates select=".." mode="classification"/>
-    <xsl:text>- - Unterkategorie </xsl:text>
+    <xsl:text>- - - Subcategory </xsl:text>
     <xsl:value-of select="@id"/>
     <xsl:text> (</xsl:text>
-    <xsl:value-of select="bjcp:name"/>
+    <xsl:value-of select="name"/>
     <xsl:text>)</xsl:text>
     <xsl:text><![CDATA[<br/>]]></xsl:text>
   </xsl:template>
 
-  <xsl:template match="bjcp:category" mode="classification">
-    <xsl:text>- Kategorie </xsl:text>
+  <xsl:template match="category" mode="classification">
+    <xsl:apply-templates select=".." mode="classification"/>
+    <xsl:text>- - Category </xsl:text>
     <xsl:value-of select="@id"/>
     <xsl:text> (</xsl:text>
-    <xsl:value-of select="bjcp:name"/>
+    <xsl:value-of select="name"/>
     <xsl:text>)</xsl:text>
+    <xsl:text><![CDATA[<br/>]]></xsl:text>
+  </xsl:template>
+
+  <xsl:template match="class" mode="classification">
+    <xsl:text>- Class </xsl:text>
+    <xsl:value-of select="concat(translate(substring(@type,1,1),'abcdefghijklmnopqrstuvwxyz','ABCDEFGHIJKLMNOPQRSTUVWXYZ'), substring(@type,2))"/>
     <xsl:text><![CDATA[<br/>]]></xsl:text>
   </xsl:template>
 
   <xsl:template match="*" mode="section">
     <xsl:text><![CDATA[<dt>]]></xsl:text>
-    <xsl:choose>
-      <xsl:when test="local-name(.) = 'description'">Beschreibung</xsl:when>
-      <xsl:when test="local-name(.) = 'overall-impression'">Gesamteindruck</xsl:when>
-      <xsl:when test="local-name(.) = 'aroma'">Geruch</xsl:when>
-      <xsl:when test="local-name(.) = 'appearance'">Erscheinungsbild</xsl:when>
-      <xsl:when test="local-name(.) = 'flavor'">Geschmack</xsl:when>
-      <xsl:when test="local-name(.) = 'mouthfeel'">Mundgefühl</xsl:when>
-      <xsl:when test="local-name(.) = 'comments'">Kommentare</xsl:when>
-      <xsl:when test="local-name(.) = 'history'">Geschichte</xsl:when>
-      <xsl:when test="local-name(.) = 'characteristic-ingredients'">Charakteristische Zutaten</xsl:when>
-      <xsl:when test="local-name(.) = 'style-comparison'">Stilvergleich</xsl:when>
-      <xsl:when test="local-name(.) = 'entry-instructions'">Einreichungsbestimmungen</xsl:when>
-      <xsl:when test="local-name(.) = 'commercial-examples'">Kommerzielle Beispiele</xsl:when>
-      <xsl:when test="local-name(.) = 'specs'">Eckdaten</xsl:when>
-      <xsl:when test="local-name(.) = 'tags'">Tags</xsl:when>
-      <xsl:when test="local-name(.) = 'strength-classifications'">Stärkeklassifikationen</xsl:when>
-    </xsl:choose>
+    <xsl:value-of select="concat(translate(substring(local-name(.),1,1),'abcdefghijklmnopqrstuvwxyz','ABCDEFGHIJKLMNOPQRSTUVWXYZ'), substring(local-name(.),2))"/>
     <xsl:text><![CDATA[</dt>]]></xsl:text>
     <xsl:text><![CDATA[<dd>]]></xsl:text>
     <xsl:call-template name="subst">
-      <xsl:with-param name="text" select="."/>
+      <xsl:with-param name="text" select="./text()"/>
       <xsl:with-param name="replace">'</xsl:with-param>
       <xsl:with-param name="with">\'</xsl:with-param>
     </xsl:call-template>
@@ -164,83 +154,93 @@
           <xsl:text>, </xsl:text>
         </xsl:otherwise>
       </xsl:choose>
-      <xsl:value-of select="./bjcp:name"/>
+      <xsl:value-of select="./name"/>
       <xsl:if test="position() = last()">
         <xsl:text><![CDATA[</dd>]]></xsl:text>
       </xsl:if>
     </xsl:for-each>
   </xsl:template>
 
-  <xsl:template match="bjcp:specs">
-    <xsl:text><![CDATA[<dt>]]>Eckdaten<![CDATA[</dt>]]></xsl:text>
-    <xsl:text><![CDATA[<dd>]]></xsl:text>
+  <xsl:template match="*" mode="specialties">
+    <xsl:if test="entry_instructions">
+      <xsl:text><![CDATA[<dt>Specialty Entry Instructions</dt>]]></xsl:text>
+      <xsl:text><![CDATA[<dd>]]></xsl:text>
+      <xsl:apply-templates select="entry_instructions" mode="instr"/>
+      <xsl:text><![CDATA[</dd>]]></xsl:text>
+    </xsl:if>
+  </xsl:template>
+
+  <xsl:template match="stats">
     <xsl:text><![CDATA[<table>]]></xsl:text>
-    <xsl:if test="bjcp:ibu/@min">
-      <xsl:text><![CDATA[<tr><td>Bittere</td><td>]]></xsl:text>
-      <xsl:value-of select="bjcp:ibu/@min"/>
-      <xsl:text> - </xsl:text>
-      <xsl:value-of select="bjcp:ibu/@max"/>
-      <xsl:text> IBU</xsl:text>
-      <xsl:text><![CDATA[</td><td>]]></xsl:text>
-      <xsl:if test="bjcp:og/@min">
-	<xsl:text>( </xsl:text>
-	<xsl:value-of select="brew:bitterWort(bjcp:ibu/@min, bjcp:og/@max)"/>
-	<xsl:text> - </xsl:text>
-	<xsl:value-of select="brew:bitterWort(bjcp:ibu/@max, bjcp:og/@min)"/>
-	<xsl:text> )</xsl:text>
-      </xsl:if>
-      <xsl:text><![CDATA[</td></tr>]]></xsl:text>
-    </xsl:if>
-    <xsl:if test="bjcp:srm/@min">
-      <xsl:text><![CDATA[<tr><td>Farbe</td><td>]]></xsl:text>
-      <xsl:value-of select="format-number(brew:srmToEbc(bjcp:srm/@min),'0.0')"/>
-      <xsl:text> - </xsl:text>
-      <xsl:value-of select="format-number(brew:srmToEbc(bjcp:srm/@max),'0.0')"/>
-      <xsl:text> EBC</xsl:text>
-      <xsl:text><![CDATA[</td><td>]]></xsl:text>
-      <xsl:value-of select="bjcp:srm/@min"/>
-      <xsl:text> - </xsl:text>
-      <xsl:value-of select="bjcp:srm/@max"/>
-      <xsl:text> SRM</xsl:text>
-      <xsl:text><![CDATA[</td></tr>]]></xsl:text>
-    </xsl:if>
-    <xsl:if test="bjcp:og/@min">
+    <xsl:if test="og/@flexible = 'false'">
       <xsl:text><![CDATA[<tr><td>Stammwürze</td><td>]]></xsl:text>
-      <xsl:value-of select="format-number(brew:sgToPlato(bjcp:og/@min),'0.0')"/>
+      <xsl:value-of select="format-number(brew:sgToPlato(og/low),'0.0')"/>
       <xsl:text> - </xsl:text>
-      <xsl:value-of select="format-number(brew:sgToPlato(bjcp:og/@max),'0.0')"/>
+      <xsl:value-of select="format-number(brew:sgToPlato(og/high),'0.0')"/>
       <xsl:text> °P</xsl:text>
       <xsl:text><![CDATA[</td><td>]]></xsl:text>
       <xsl:text>OG </xsl:text>
-      <xsl:value-of select="bjcp:og/@min"/>
+      <xsl:value-of select="og/low"/>
       <xsl:text> - </xsl:text>
-      <xsl:value-of select="bjcp:og/@max"/>
+      <xsl:value-of select="og/high"/>
       <xsl:text><![CDATA[</td></tr>]]></xsl:text>
     </xsl:if>
-    <xsl:if test="bjcp:fg/@min">
+    <xsl:if test="fg/@flexible = 'false'">
       <xsl:text><![CDATA[<tr><td>Restextrakt</td><td>]]></xsl:text>
-      <xsl:value-of select="format-number(brew:sgToPlato(bjcp:fg/@min),'0.0')"/>
+      <xsl:value-of select="format-number(brew:sgToPlato(fg/low),'0.0')"/>
       <xsl:text> - </xsl:text>
-      <xsl:value-of select="format-number(brew:sgToPlato(bjcp:fg/@max),'0.0')"/>
+      <xsl:value-of select="format-number(brew:sgToPlato(fg/high),'0.0')"/>
       <xsl:text> GG%</xsl:text>
       <xsl:text><![CDATA[</td><td>]]></xsl:text>
       <xsl:text>FG </xsl:text>
-      <xsl:value-of select="bjcp:fg/@min"/>
+      <xsl:value-of select="fg/low"/>
       <xsl:text> - </xsl:text>
-      <xsl:value-of select="bjcp:fg/@max"/>
+      <xsl:value-of select="fg/high"/>
       <xsl:text><![CDATA[</td></tr>]]></xsl:text>
     </xsl:if>
-    <xsl:if test="bjcp:abv/@min">
+    <xsl:if test="abv/@flexible = 'false'">
       <xsl:text><![CDATA[<tr><td>Alkohol</td><td>]]></xsl:text>
-      <xsl:value-of select="format-number(bjcp:abv/@min,'0.0')"/>
+      <xsl:value-of select="format-number(abv/low,'0.0')"/>
       <xsl:text> - </xsl:text>
-      <xsl:value-of select="format-number(bjcp:abv/@max,'0.0')"/>
+      <xsl:value-of select="format-number(abv/high,'0.0')"/>
       <xsl:text> %vol</xsl:text>
       <xsl:text><![CDATA[</td><td>]]></xsl:text>
       <xsl:text><![CDATA[</td></tr>]]></xsl:text>
     </xsl:if>
+    <xsl:if test="ibu/@flexible = 'false'">
+      <xsl:text><![CDATA[<tr><td>Bittere</td><td>]]></xsl:text>
+      <xsl:value-of select="ibu/low"/>
+      <xsl:text> - </xsl:text>
+      <xsl:value-of select="ibu/high"/>
+      <xsl:text> IBU</xsl:text>
+      <xsl:text><![CDATA[</td><td>]]></xsl:text>
+      <xsl:if test="og/@flexible = 'false'">
+	<xsl:text>( </xsl:text>
+	<xsl:value-of select="brew:bitterWort(ibu/low, og/high)"/>
+	<xsl:text> - </xsl:text>
+	<xsl:value-of select="brew:bitterWort(ibu/high, og/low)"/>
+	<xsl:text> )</xsl:text>
+      </xsl:if>
+      <xsl:text><![CDATA[</td></tr>]]></xsl:text>
+    </xsl:if>
+    <xsl:if test="srm/@flexible = 'false'">
+      <xsl:text><![CDATA[<tr><td>Farbe</td><td>]]></xsl:text>
+      <xsl:value-of select="format-number(brew:srmToEbc(srm/low),'0.0')"/>
+      <xsl:text> - </xsl:text>
+      <xsl:value-of select="format-number(brew:srmToEbc(srm/high),'0.0')"/>
+      <xsl:text> EBC</xsl:text>
+      <xsl:text><![CDATA[</td><td>]]></xsl:text>
+      <xsl:value-of select="srm/low"/>
+      <xsl:text> - </xsl:text>
+      <xsl:value-of select="srm/high"/>
+      <xsl:text> SRM</xsl:text>
+      <xsl:text><![CDATA[</td></tr>]]></xsl:text>
+    </xsl:if>
     <xsl:text><![CDATA[</table>]]></xsl:text>
-    <xsl:text><![CDATA[</dd>]]></xsl:text>
+  </xsl:template>
+
+  <xsl:template match="entry_instructions" mode="instr">
+    <xsl:apply-templates select="text() | *" mode="asis"/>
   </xsl:template>
 
   <xsl:template match="*" mode="asis">
@@ -268,7 +268,7 @@
     </xsl:call-template>
   </xsl:template>
 
-  <xsl:template match="bjcp:category | bjcp:subcategory">
+  <xsl:template match="class | category | subcategory | specialty">
     <xsl:variable name="id">
       <xsl:choose>
 	<xsl:when test="@type">
@@ -278,7 +278,7 @@
 	  <xsl:value-of select="@id"/>
 	</xsl:when>
 	<xsl:otherwise>
-	  <xsl:value-of select="bjcp:name"/>
+	  <xsl:value-of select="name"/>
 	</xsl:otherwise>
       </xsl:choose>
     </xsl:variable>
@@ -289,43 +289,47 @@
           <xsl:value-of select="substring(@type,2)"/>
 	</xsl:when>
 	<xsl:otherwise>
-          <xsl:value-of select="bjcp:name"/>
+          <xsl:value-of select="name"/>
 	</xsl:otherwise>
       </xsl:choose>
     </xsl:variable>
     <xsl:variable name="postname">bjcp-<xsl:value-of select="translate($id,'ABCDEFGHIJKLMNOPQRSTUVWXYZ ','abcdefghijklmnopqrstuvwxyz-')"/></xsl:variable>
     <xsl:text>INSERT INTO `wp_posts` (post_author,post_date,post_date_gmt,post_content,post_title,post_excerpt,comment_status,ping_status,post_name,to_ping,pinged,post_modified,post_modified_gmt,post_content_filtered,post_type) VALUES (1,NOW(),NOW(),'<![CDATA[<!-- auto-generated bjcp glossary post-->]]></xsl:text>
-
-    <xsl:text><![CDATA[</h2><dt>Klassifizierung</dt><dd>]]></xsl:text>
+<!--
+    <xsl:choose>
+      <xsl:when test="local-name(.) = 'class'">
+        <xsl:value-of select="translate(substring(@type,1,1),'abcdefghijklmnopqrstuvwxyz','ABCDEFGHIJKLMNOPQRSTUVWXYZ')"/>
+        <xsl:value-of select="substring(@type,2)"/>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:value-of select="name"/>
+      </xsl:otherwise>
+    </xsl:choose>
+-->
+    <xsl:text><![CDATA[</h2><dt>Classification</dt><dd>]]></xsl:text>
     <xsl:apply-templates select="." mode="classification"/>
     <xsl:text><![CDATA[</dd>]]></xsl:text>
 
-    <xsl:apply-templates select="bjcp:description" mode="section"/>
-    
-    <xsl:apply-templates select="bjcp:overall-impression" mode="section"/>
-    <xsl:apply-templates select="bjcp:aroma" mode="section"/>
-    <xsl:apply-templates select="bjcp:appearance" mode="section"/>
-    <xsl:apply-templates select="bjcp:flavor" mode="section"/>
-    <xsl:apply-templates select="bjcp:mouthfeel" mode="section"/>
-    <xsl:apply-templates select="bjcp:comments" mode="section"/>
-    <xsl:apply-templates select="bjcp:history" mode="section"/>
-    <xsl:apply-templates select="bjcp:characteristic-ingredients" mode="section"/>
-    <xsl:apply-templates select="bjcp:style-comparison" mode="section"/>
-    <xsl:apply-templates select="bjcp:entry-instructions" mode="section"/>
+    <xsl:apply-templates select="stats"/>
 
-    <xsl:apply-templates select="bjcp:strength-classifications" mode="section"/>
-    
-    <xsl:apply-templates select="bjcp:commercial-examples" mode="section"/>
-    <xsl:apply-templates select="bjcp:specs"/>
-    <xsl:apply-templates select="bjcp:tags" mode="section"/>
+    <xsl:apply-templates select="notes" mode="section"/>
+    <xsl:apply-templates select="aroma" mode="section"/>
+    <xsl:apply-templates select="appearance" mode="section"/>
+    <xsl:apply-templates select="flavor" mode="section"/>
+    <xsl:apply-templates select="mouthfeel" mode="section"/>
+    <xsl:apply-templates select="impression" mode="section"/>
+    <xsl:apply-templates select="comments" mode="section"/>
+    <xsl:apply-templates select="history" mode="section"/>
+    <xsl:apply-templates select="ingredients" mode="section"/>
+    <xsl:apply-templates select="comparison" mode="section"/>
+    <xsl:apply-templates select="examples" mode="section"/>
+    <xsl:apply-templates select="tags" mode="section"/>
 
-    <!--
     <xsl:apply-templates select="." mode="specialties"/>
-    -->
-    
+
     <xsl:apply-templates select="." mode="children"/>
 
-    <xsl:text></xsl:text><xsl:text><![CDATA[<p style="font-size: 70%;">Diese Informationen entstammen dem <a href="https://heimbrauconvention.de/index.php/bjcp-styleguide/">Übersetzungsprojekt</a> der <a href="http://dev.bjcp.org/beer-styles/introduction-to-the-2015-guidelines/">BJCP Style Guidelines</a>.</p>]]></xsl:text>
+    <xsl:text></xsl:text><xsl:text><![CDATA[<p style="font-size: 70%;">Diese Informationen entstammen einer XML-Form der BJCP Style Guidelines, die per <a href="https://github.com/meanphil/bjcp-guidelines-2015">GitHub</a> öffentlich verfügbar ist. Ich bereite diese Daten hier lediglich für meine persönlichen und nicht gewerblichen Zwecke auf, um sie leichter lesbar zu machen und Werte mit den in Deutschland gebräuchlicheren Einheiten darzustellen.</p>]]></xsl:text>
 
     <xsl:text>','</xsl:text>
     <xsl:value-of select="$title"/>
