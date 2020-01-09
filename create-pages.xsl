@@ -393,6 +393,33 @@
 
 
 
+  <xsl:template match="bjcp:div[contains(@class,'table')]" mode="asis">
+    <xsl:variable name="elem">
+      <xsl:choose>
+	<xsl:when test="@class='table'">table</xsl:when>
+	<xsl:when test="@class='table-row'">tr</xsl:when>
+	<xsl:when test="@class='table-cell'">td</xsl:when>
+	<xsl:when test="@class='table-head'">tr</xsl:when>
+      </xsl:choose>
+    </xsl:variable>
+    <xsl:text><![CDATA[<]]></xsl:text>
+    <xsl:value-of select="$elem"/>
+    <xsl:if test="@class='table-head'">
+      <xsl:text><![CDATA[><td colspan="2" style="font-weight:bold"]]></xsl:text>
+    </xsl:if>
+    <!--<xsl:apply-templates select="@*" mode="asis"/>-->
+    <xsl:text><![CDATA[>]]></xsl:text>
+    <xsl:apply-templates select="* | text()" mode="asis"/>
+    <xsl:text><![CDATA[</]]></xsl:text>
+    <xsl:if test="@class='table-head'">
+      <xsl:text><![CDATA[td><]]></xsl:text>
+    </xsl:if>
+    <xsl:value-of select="$elem"/>
+    <xsl:text><![CDATA[>]]></xsl:text>
+  </xsl:template>
+
+
+
   <xsl:template match="bjcp:tag" mode="asis">
     <xsl:text><![CDATA[<a href="]]></xsl:text>
     <xsl:value-of select="$postprefix"/>
@@ -420,19 +447,20 @@
       </xsl:otherwise>
     </xsl:choose>
     <xsl:text><![CDATA[\']]></xsl:text>
-    <!--
-    <xsl:copy>
-      <xsl:apply-templates select="@*" mode="asis"/>
-      <xsl:apply-templates mode="asis"/>
-    </xsl:copy>
-    -->
   </xsl:template>
 
 
   
   <xsl:template match="text()" mode="asis">
+    <xsl:variable name="tmp">
+      <xsl:call-template name="subst">
+	<xsl:with-param name="text" select="."/>
+	<xsl:with-param name="replace">&lt;</xsl:with-param>
+	<xsl:with-param name="with">&amp;lt;</xsl:with-param>
+      </xsl:call-template>
+    </xsl:variable>
     <xsl:call-template name="subst">
-      <xsl:with-param name="text" select="."/>
+      <xsl:with-param name="text" select="$tmp"/>
       <xsl:with-param name="replace">'</xsl:with-param>
       <xsl:with-param name="with">\'</xsl:with-param>
     </xsl:call-template>
